@@ -3,15 +3,19 @@ set -euo pipefail
 
 # Builds Scrollie.app from the Swift package.
 # Usage: ./scripts/build.sh [--install]
-#   SIGN_IDENTITY="Apple Development: ..." ./scripts/build.sh   # sign with a real identity
+#   SIGN_IDENTITY="Apple Development: ..." ./scripts/build.sh   # pick a specific identity
+#   SIGN_IDENTITY=- ./scripts/build.sh                          # force ad-hoc signing
 #
-# Without SIGN_IDENTITY the app is ad-hoc signed. That works, but every rebuild gets a new
+# Without SIGN_IDENTITY the script uses the first "Apple Development" identity in your
+# keychain and falls back to ad-hoc signing. Ad-hoc works, but every rebuild gets a new
 # signature, so macOS forgets the Accessibility grant: remove Scrollie from
 # System Settings > Privacy & Security > Accessibility and add it again after a rebuild.
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 APP_NAME="Scrollie"
+SIGN_IDENTITY="${SIGN_IDENTITY:-$(security find-identity -v -p codesigning 2>/dev/null \
+    | grep -o '"Apple Development: [^"]*"' | head -1 | tr -d '"')}"
 SIGN_IDENTITY="${SIGN_IDENTITY:--}"
 OUT_DIR="build"
 APP="$OUT_DIR/$APP_NAME.app"
@@ -27,10 +31,10 @@ cp "$APP_NAME/Info.plist" "$APP/Contents/Info.plist"
 if [ "$SIGN_IDENTITY" = "-" ]; then
     codesign --force --sign - "$APP"
 else
-    codesign --force --sign "$SIGN_IDENTITY" --options runtime --timestamp "$APP"
+    codesign --force --sign "$SIGN_IDENTITY" --options runtime "$APP"
 fi
 
-echo "Built $APP"
+echo "Built $APP (signed as: $SIGN_IDENTITY)"
 
 if [ "${1:-}" = "--install" ]; then
     pkill -x "$APP_NAME" 2>/dev/null || true

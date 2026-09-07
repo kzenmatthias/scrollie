@@ -44,9 +44,11 @@ but then Xcode itself needs the Accessibility grant.
 
 ### Signing
 
-By default the app is ad-hoc signed. Every rebuild produces a new signature, and macOS then
-treats it as a new app: remove Scrollie from the Accessibility list and add it again. To
-avoid that, sign with your own identity:
+The build script signs with the first "Apple Development" identity in your keychain, so
+the Accessibility grant survives rebuilds. Without such an identity it falls back to ad-hoc
+signing; every rebuild then produces a new signature, and macOS treats it as a new app:
+remove Scrollie from the Accessibility list and add it again. Pick an identity explicitly
+with:
 
 ```bash
 SIGN_IDENTITY="Apple Development: Your Name (TEAMID)" ./scripts/build.sh --install
