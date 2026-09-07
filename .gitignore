@@ -1,0 +1,16 @@
+# Build output
+build/
+.build/
+DerivedData/
+Package.resolved
+
+# Xcode
+*.xcuserstate
+*.xcuserdatad
+xcuserdata/
+.swiftpm/
+
+# macOS
+.DS_Store
+*.swp
+*~
